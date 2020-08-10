@@ -1,22 +1,32 @@
 pipeline { 
-    agent { docker { image 'alpine:3.7' } } 
+    agent { 
+	docker {  { image 'bryandollery/alpine-docker' } } 
     options {
         skipStagesAfterUnstable()
     }
     stages {
-        stage('BuildStaging') { 
+        stage('generate manifest') { 
             steps { 
-                echo 'creating infra for staging'
+                sh """
+cat <<EOF > ./manifest.txt
+name: ${JOB_NAME}
+time: ${currentBuild.startTimeInMillis}
+build: ${BUILD_NUMBER}
+commit: ${GIT_COMMIT}
+url: ${GIT_URL}
+EOF
+"""
+
             }
         }
-        stage('DeployStaging'){
+        stage('build'){
             steps {
-                echo 'deploying application on staging environment'
+                sh "docker build --tag manifest-holder:latest ."
             }
         }
-        stage('ValidateStageDeployment') {
+        stage('test') {
             steps {
-                echo 'validate deployment on staging'
+                sh "docker run --rm manifest-holder"
             }
         }
     }
