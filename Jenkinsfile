@@ -1,4 +1,17 @@
-ld: ${BUILD_NUMBER}
+pipeline { 
+    agent { 
+	docker {  { image 'bryandollery/alpine-docker' } } 
+    options {
+        skipStagesAfterUnstable()
+    }
+    stages {
+        stage('generate manifest') { 
+            steps { 
+                sh """
+cat <<EOF > ./manifest.txt
+name: ${JOB_NAME}
+time: ${currentBuild.startTimeInMillis}
+build: ${BUILD_NUMBER}
 commit: ${GIT_COMMIT}
 url: ${GIT_URL}
 EOF
